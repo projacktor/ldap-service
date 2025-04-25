@@ -21,15 +21,6 @@ func getIpFromRequest(r *http.Request) string {
 	return ""
 }
 
-func MainPage(w http.ResponseWriter, r *http.Request) {
-	ip := getIpFromRequest(r)
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(map[string]string{"ip": ip}); err != nil {
-		log.Println("There was an error with header X-Forwarded-For parsing:", err)
-	}
-}
-
 func AuthorizedPage(w http.ResponseWriter, r *http.Request) {
 	response := authorizedUser{
 		role: "admin",

@@ -7,6 +7,5 @@ import (
 )
 
 func InitRoutes(router *chi.Mux) {
-	router.Get("/", handlers.MainPage)
 	router.Get("/authorized", handlers.AuthorizedPage)
 }
