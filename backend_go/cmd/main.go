@@ -1,6 +1,7 @@
 package main
 
 import (
+	"BackendGoLdap/routes"
 	"log"
 	"net/http"
 
@@ -8,7 +9,9 @@ import (
 )
 
 func main() {
+
 	router := chi.NewRouter()
+	routes.InitRoutes(router)
 
 	log.Println("Server is running")
 
