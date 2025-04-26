@@ -5,11 +5,16 @@ import (
     "sync"
 
     "github.com/spf13/viper"
+    "go.uber.org/zap"
+
+    "BackendGoLdap/logger"
 )
 
 var (
     cfg  *Config
+    log *zap.Logger
     once sync.Once
+    logOnce sync.Once
 )
 
 // Config holds all the app configuration values
@@ -56,4 +61,21 @@ func GetConfig () (*Config, error) {
     })
 
     return cfg, err
+}
+
+func InitLogger() error {
+    var err error
+    logOnce.Do(func() {
+        cfg, err := GetConfig()
+        if err != nil {
+            return 
+        }
+        log, err = logger.NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic) // log is global variable
+    })
+
+    return err
+}
+
+func GetLogger() *zap.Logger {
+    return log // log is global variable
 }
