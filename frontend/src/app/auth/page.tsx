@@ -42,7 +42,9 @@ function Page() {
           className="flex flex-col items-center space-y-5 text-white"
         >
           <div className="w-90 space-y-2">
-            {errors.username && (<p className="text-left text-sm text-[#c41010]">{errors.username.message}</p>)}
+            {errors.username && (
+              <p className="text-left text-sm text-[#c41010]">{errors.username.message}</p>
+            )}
             <Input
               id="username"
               type="text"
@@ -53,9 +55,7 @@ function Page() {
           </div>
 
           <div className="w-90 space-y-2">
-            {errors.password && (
-              <p className="text-sm text-[#c41010]">{errors.password.message}</p>
-            )}
+            {errors.password && <p className="text-sm text-[#c41010]">{errors.password.message}</p>}
             <Input
               id="password"
               type="password"
