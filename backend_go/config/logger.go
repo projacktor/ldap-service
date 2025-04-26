@@ -1,4 +1,4 @@
-package logger
+package config
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
 )
 
 // kafkaSyncer implements zapcore.WriteSyncer by sending each log entry to Kafka.
@@ -25,7 +26,7 @@ func (k *kafkaSyncer) Write(p []byte) (n int, err error) {
 
 	// Пробуем записать сообщение несколько раз
 	maxRetries := 3
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		ctx := context.Background()
 		if err := k.writer.WriteMessages(ctx, msg); err != nil {
 			log.Printf("attempt %d/%d: failed to write to kafka: %v", i+1, maxRetries, err)
