@@ -2,8 +2,17 @@ package config
 
 import (
     "strings"
+    "sync"
 
     "github.com/spf13/viper"
+    "go.uber.org/zap"
+)
+
+var (
+    cfg  *Config
+    logg *zap.Logger
+    once sync.Once
+    logOnce sync.Once
 )
 
 // Config holds all the app configuration values
@@ -13,11 +22,11 @@ type Config struct {
     KafkaBrokers        []string
     KafkaTopic          string
     KafkaConsumerGroup  string
-    DBHost              string
-    DBPort              int
-    DBUser              string
-    DBPass              string
-    DBName              string
+
+    BaseUrl             string
+	Realm               string
+	RestApiClientId     string
+	RestApiClientSecret string
 }
 
 // Load reads .env and environment, applies defaults, and returns a Config
@@ -32,12 +41,39 @@ func Load() (*Config, error) {
         KafkaBrokers: strings.Split(viper.GetString("KAFKA_BROKERS"), ","),
         KafkaTopic:   viper.GetString("KAFKA_TOPIC"),
         KafkaConsumerGroup: viper.GetString("KAFKA_CONSUMER_GROUP"),
-        DBHost:       viper.GetString("DB_HOST"),
-        DBPort:       viper.GetInt("DB_PORT"),
-        DBUser:       viper.GetString("DB_USER"),
-        DBPass:       viper.GetString("DB_PASS"),
-        DBName:       viper.GetString("DB_NAME"),
+
+        BaseUrl:             viper.GetString("KEYCLOAK_BASE_URL"),
+		Realm:               viper.GetString("KEYCLOAK_REALM"),
+		RestApiClientId:     viper.GetString("KEYCLOAK_REST_API_CLIENT_ID"),
+		RestApiClientSecret: viper.GetString("KEYCLOAK_REST_API_CLIENT_SECRET"),
     }
 
     return cfg, nil
+}
+
+func GetConfig () (*Config, error) {
+    var err error
+
+    once.Do(func() {
+        cfg, err = Load()
+    })
+
+    return cfg, err
+}
+
+func InitLogger() error {
+    var err error
+    logOnce.Do(func() {
+        cfg, err := GetConfig()
+        if err != nil {
+            return 
+        }
+        logg, err = NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic) // log is global variable
+    })
+
+    return err
+}
+
+func GetLogger() *zap.Logger {
+    return logg // log is global variable
 }

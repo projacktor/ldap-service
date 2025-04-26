@@ -1,10 +1,11 @@
-// main.go
 package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
+    "context"
+    "github.com/Nerzal/gocloak/v13"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -13,7 +14,6 @@ import (
 
 	"BackendGoLdap/config"
     "BackendGoLdap/routes"
-	"BackendGoLdap/logger"
 )
 
 func init() {
@@ -23,17 +23,18 @@ func init() {
 
 func main() {
     // Load typed config
-    cfg, err := config.Load()
+    cfg, err := config.GetConfig()
     if err != nil {
         log.Fatalf("config load error: %v", err)
     }
 
     // Initialize zap + Kafka logger
-    logger, err := logger.NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic)
-    if err != nil {
+    if err := config.InitLogger(); err != nil {
         log.Fatalf("failed to init logger: %v", err)
     }
-    defer logger.Sync()
+    defer config.GetLogger().Sync()
+
+    logger := config.GetLogger()
 
     // Add base context to logger
     logger = logger.With(
@@ -45,6 +46,16 @@ func main() {
     r := chi.NewRouter()
 
     routes.InitRoutes(r)
+
+    ctx := context.Background()
+	client := gocloak.NewClient("https://194.147.34.121:8443")
+
+	token, err := client.LoginAdmin(ctx, "admin-username", "admin-password", "master")
+	if err != nil {
+		log.Fatalf("Login failed: %v", err)
+	}
+
+	fmt.Printf("Access Token: %s\n", token.AccessToken)
 
     // Application endpoint
     r.Get("/", func(w http.ResponseWriter, r *http.Request) {

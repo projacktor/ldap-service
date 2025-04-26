@@ -5,29 +5,16 @@ import (
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
+
+	"BackendGoLdap/config"
 )
 
-type identityManager struct {
-	baseUrl             string
-	realm               string
-	restApiClientId     string
-	restApiClientSecret string
-}
-
-func NewIdentityManager() *identityManager {
-	return &identityManager{
-		baseUrl:             viper.GetString("KEYCLOAK_BASE_URL"),
-		realm:               viper.GetString("KEYCLOAK_REALM"),
-		restApiClientId:     viper.GetString("KEYCLOAK_REST_API_CLIENT_ID"),
-		restApiClientSecret: viper.GetString("KEYCLOAK_REST_API_CLIENT_SECRET"),
-	}
-}
 
 // Client logging in Keycloak
-func (im *identityManager) loginRestApiClient(ctx context.Context) (*gocloak.JWT, error) {
-	client := gocloak.NewClient(im.baseUrl)
-	token, err := client.LoginClient(ctx, im.restApiClientId, im.restApiClientSecret, im.realm)
+func () loginRestApiClient(ctx context.Context) (*gocloak.JWT, error) {
+	cfg, err := config.GetConfig()
+	client := gocloak.NewClient(cfg.BaseUrl)
+	token, err := client.LoginClient(ctx, cfg.RestApiClientId, cfg.RestApiClientSecret, cfg.Realm)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to login rest api client")
 	}
@@ -35,8 +22,8 @@ func (im *identityManager) loginRestApiClient(ctx context.Context) (*gocloak.JWT
 }
 
 func (im *identityManager) CreateUser(ctx context.Context, user gocloak.User, password string) (*gocloak.User, error) {
-	// client := gocloak.NewClient(im.baseUrl)
-	// token, err := im.loginRestApiClient(ctx); if err != nil {
-	// 	return nil, err
-	// }
+	client := gocloak.NewClient(im.baseUrl)
+	token, err := im.loginRestApiClient(ctx); if err != nil {
+		return nil, err
+	}
 }
