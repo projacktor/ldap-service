@@ -120,3 +120,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+main {
+  @apply flex h-screen w-screen items-center justify-center;
+}

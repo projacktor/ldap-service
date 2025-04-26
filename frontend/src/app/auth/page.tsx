@@ -29,7 +29,7 @@ function Page() {
   const onSubmit: SubmitHandler<FormSchema> = (data) => console.log(data)
 
   return (
-    <main className="flex h-screen w-screen items-center justify-center">
+    <main>
       <div className="flex flex-col items-center space-y-8">
         <article className="space-y-4">
           <h1 className="text-center text-5xl font-bold text-white">Sign in to your account</h1>
