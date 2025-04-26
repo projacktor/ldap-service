@@ -23,10 +23,17 @@ type Config struct {
     KafkaTopic          string
     KafkaConsumerGroup  string
 
-    BaseUrl             string
-	Realm               string
-	RestApiClientId     string
-	RestApiClientSecret string
+    // Keycloak
+    KeycloakBaseURL     string
+    KeycloakRealm       string
+    KeycloakClientID    string
+    KeycloakClientSecret string
+
+    // LDAP
+    LDAPHost       string
+    LDAPBaseDN     string
+    LDAPBindDN     string // service account
+    LDAPBindPass   string
 }
 
 // Load reads .env and environment, applies defaults, and returns a Config
@@ -41,11 +48,16 @@ func Load() (*Config, error) {
         KafkaBrokers: strings.Split(viper.GetString("KAFKA_BROKERS"), ","),
         KafkaTopic:   viper.GetString("KAFKA_TOPIC"),
         KafkaConsumerGroup: viper.GetString("KAFKA_CONSUMER_GROUP"),
+        
+        KeycloakBaseURL:     viper.GetString("KEYCLOAK_BASE_URL"),
+        KeycloakRealm:       viper.GetString("KEYCLOAK_REALM"),
+        KeycloakClientID:    viper.GetString("KEYCLOAK_REST_API_CLIENT_ID"),
+        KeycloakClientSecret:viper.GetString("KEYCLOAK_REST_API_CLIENT_SECRET"),
 
-        BaseUrl:             viper.GetString("KEYCLOAK_BASE_URL"),
-		Realm:               viper.GetString("KEYCLOAK_REALM"),
-		RestApiClientId:     viper.GetString("KEYCLOAK_REST_API_CLIENT_ID"),
-		RestApiClientSecret: viper.GetString("KEYCLOAK_REST_API_CLIENT_SECRET"),
+        LDAPHost:     viper.GetString("LDAP_HOST"),
+        LDAPBaseDN:   strings.Trim(viper.GetString("LDAP_BASE_DN"), `"`),
+        LDAPBindDN:   viper.GetString("LDAP_USER_DN"),
+        LDAPBindPass: viper.GetString("LDAP_USER_PASSWORD"),
     }
 
     return cfg, nil
@@ -68,7 +80,7 @@ func InitLogger() error {
         if err != nil {
             return 
         }
-        logg, err = NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic) // log is global variable
+        logg, _ = NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic) // log is global variable
     })
 
     return err

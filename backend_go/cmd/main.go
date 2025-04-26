@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-    "context"
-    "github.com/Nerzal/gocloak/v13"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
 	"github.com/go-chi/chi/v5"
+    "github.com/Nerzal/gocloak/v13"
 
 	"BackendGoLdap/config"
-    "BackendGoLdap/routes"
+    "BackendGoLdap/auth"
 )
 
 func init() {
@@ -35,6 +34,8 @@ func main() {
     defer config.GetLogger().Sync()
 
     logger := config.GetLogger()
+    
+    logger.Info("LDAP Host", zap.String("version", cfg.LDAPHost))
 
     // Add base context to logger
     logger = logger.With(
@@ -42,20 +43,10 @@ func main() {
         zap.String("env", "development"),
     )
 
+    kc := gocloak.NewClient(cfg.KeycloakBaseURL)
+
     // Build Chi router
     r := chi.NewRouter()
-
-    routes.InitRoutes(r)
-
-    ctx := context.Background()
-	client := gocloak.NewClient("https://194.147.34.121:8443")
-
-	token, err := client.LoginAdmin(ctx, "admin-username", "admin-password", "master")
-	if err != nil {
-		log.Fatalf("Login failed: %v", err)
-	}
-
-	fmt.Printf("Access Token: %s\n", token.AccessToken)
 
     // Application endpoint
     r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -68,6 +59,17 @@ func main() {
         if err != nil {
             logger.Error("failed to write response", zap.Error(err))
         }
+    })
+
+    // Public LDAP→Keycloak login
+    r.Post("/auth/login", auth.LoginHandler(kc, cfg))
+
+    // Protected routes
+    r.Group(func(r chi.Router) {
+        r.Use(auth.AuthMiddleware(kc, cfg))
+        r.Get("/api/protected", func(w http.ResponseWriter, r *http.Request) {
+            w.Write([]byte("🔒 your secret data"))
+        })
     })
 
     // Start HTTP server
