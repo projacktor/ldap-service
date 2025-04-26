@@ -1,7 +1,6 @@
 'use client'
 import { User } from '@/lib/types'
 import Header from '@/components/Header'
-import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import Clocks from '@/components/clocks'
 
@@ -11,7 +10,6 @@ export default function Home() {
     role: 'SUPERPUPER'
   }
 
-  const mainContRef = useRef<HTMLDivElement>(null)
   return (
     <>
       <Header />
