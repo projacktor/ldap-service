@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+    "crypto/tls"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -44,6 +45,8 @@ func main() {
     )
 
     kc := gocloak.NewClient(cfg.KeycloakBaseURL)
+    kc.RestyClient().
+        SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
     // Build Chi router
     r := chi.NewRouter()
@@ -62,7 +65,7 @@ func main() {
     })
 
     // Public LDAP→Keycloak login
-    r.Post("/auth/login", auth.LoginHandler(kc, cfg))
+    r.Post("/auth/login", auth.LoginHandlerByEmail(kc, cfg))
 
     // Protected routes
     r.Group(func(r chi.Router) {

@@ -56,7 +56,7 @@ func Load() (*Config, error) {
 
         LDAPHost:     viper.GetString("LDAP_HOST"),
         LDAPBaseDN:   strings.Trim(viper.GetString("LDAP_BASE_DN"), `"`),
-        LDAPBindDN:   viper.GetString("LDAP_USER_DN"),
+        LDAPBindDN:   strings.Trim(viper.GetString("LDAP_USER_DN"), `"`),
         LDAPBindPass: viper.GetString("LDAP_USER_PASSWORD"),
     }
 
