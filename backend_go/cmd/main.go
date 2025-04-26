@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -15,7 +14,6 @@ import (
 
 	"BackendGoLdap/config"
     "BackendGoLdap/routes"
-	"BackendGoLdap/logger"
 )
 
 func init() {
@@ -31,11 +29,12 @@ func main() {
     }
 
     // Initialize zap + Kafka logger
-    logger, err := logger.NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic)
-    if err != nil {
+    if err := config.InitLogger(); err != nil {
         log.Fatalf("failed to init logger: %v", err)
     }
-    defer logger.Sync()
+    defer config.GetLogger().Sync()
+
+    logger := config.GetLogger()
 
     // Add base context to logger
     logger = logger.With(
