@@ -6,13 +6,11 @@ import (
 
     "github.com/spf13/viper"
     "go.uber.org/zap"
-
-    "BackendGoLdap/logger"
 )
 
 var (
     cfg  *Config
-    log *zap.Logger
+    logg *zap.Logger
     once sync.Once
     logOnce sync.Once
 )
@@ -70,12 +68,12 @@ func InitLogger() error {
         if err != nil {
             return 
         }
-        log, err = logger.NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic) // log is global variable
+        logg, err = NewKafkaLogger(cfg.KafkaBrokers, cfg.KafkaTopic) // log is global variable
     })
 
     return err
 }
 
 func GetLogger() *zap.Logger {
-    return log // log is global variable
+    return logg // log is global variable
 }
