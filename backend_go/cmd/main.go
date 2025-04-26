@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+    "context"
+    "github.com/Nerzal/gocloak/v13"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -23,7 +25,7 @@ func init() {
 
 func main() {
     // Load typed config
-    cfg, err := config.Load()
+    cfg, err := config.GetConfig()
     if err != nil {
         log.Fatalf("config load error: %v", err)
     }
@@ -45,6 +47,16 @@ func main() {
     r := chi.NewRouter()
 
     routes.InitRoutes(r)
+
+    ctx := context.Background()
+	client := gocloak.NewClient("https://194.147.34.121:8443")
+
+	token, err := client.LoginAdmin(ctx, "admin-username", "admin-password", "master")
+	if err != nil {
+		log.Fatalf("Login failed: %v", err)
+	}
+
+	fmt.Printf("Access Token: %s\n", token.AccessToken)
 
     // Application endpoint
     r.Get("/", func(w http.ResponseWriter, r *http.Request) {
