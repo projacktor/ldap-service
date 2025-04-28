@@ -15,6 +15,7 @@ import (
 
 	"BackendGoLdap/auth"
 	"BackendGoLdap/config"
+	"BackendGoLdap/handlers"
 )
 
 // init function runs before main() to initialize environment variables
@@ -79,6 +80,8 @@ func main() {
 			logger.Error("failed to write response", zap.Error(err))
 		}
 	})
+
+	r.Get("/users/", handlers.GetUserData())
 
 	// Public Keycloak + LDAP login
 	r.Post("/auth/login", auth.LoginHandlerByUID(kc))
