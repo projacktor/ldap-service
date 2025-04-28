@@ -1,5 +1,4 @@
-# LDAP sevice
-## Innopolis University S25 Distributed and Network Programming course project
+# LDAP Service Backend
 
 Go application for working with LDAP and logging to Kafka.
 

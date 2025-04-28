@@ -18,10 +18,10 @@ services:
       - KAFKA_CFG_LOG_RETENTION_BYTES=1073741824  # 1 ГБ на партицию
     healthcheck:
       test: ["CMD-SHELL", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
-      interval: 30s
+      interval: 5s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 2s
     networks:
       - app-net
   
