@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { isTokenExpired } from '@/lib/auth'
+import { getAccessToken, isTokenExpired } from '@/lib/auth'
 import { refreshToken } from '@/lib/api'
 
 export async function middleware(req: NextRequest) {

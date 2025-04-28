@@ -3,6 +3,7 @@ import { User } from '@/lib/types'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import Clocks from '@/components/clocks'
+import { logout } from '@/lib/auth'
 
 export default function Home() {
   const user: User = {
@@ -28,7 +29,7 @@ export default function Home() {
                 <h3 className="text-2xl font-normal hover:underline">{user.role}</h3>
               </div>
             </section>
-            <Button variant={'secondary'} className="h-10 w-90">
+            <Button variant={'secondary'} className="h-10 w-90" onClick={logout}>
               Log out
             </Button>
           </div>

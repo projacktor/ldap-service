@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { verifyUser } from '@/lib/api'
+import { useRouter } from 'next/navigation'
 
 const formSchema = z.object({
   username: z.string().min(4, {
@@ -27,7 +28,16 @@ function Page() {
     resolver: zodResolver(formSchema)
   })
 
-  const onSubmit: SubmitHandler<FormSchema> = (data) => verifyUser(data.username, data.password)
+  const router = useRouter()
+
+  const onSubmit: SubmitHandler<FormSchema> = async (data) => {
+    try {
+      await verifyUser(data.username, data.password)
+      router.push('/')
+    } catch (err) {
+      console.error('Failed to push to /', err)
+    }
+  }
 
   return (
     <main className="h-screen">
