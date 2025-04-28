@@ -1,0 +1,25 @@
+import { jwtDecode } from 'jwt-decode'
+
+interface DecodeToken {
+  exp: number
+}
+
+export function saveTokens(accessToken: string, refreshToken: string): void {
+  sessionStorage.setItem('access_token', accessToken)
+  sessionStorage.setItem('refresh_token', refreshToken)
+}
+
+export function getAccessToken(): string | null {
+  return sessionStorage.getItem('access_token')
+}
+
+export function getRefreshToken(): string | null {
+  return sessionStorage.getItem('refresh_token')
+}
+
+export function isTokenExpired(token: string): boolean {
+  const decoded: DecodeToken = jwtDecode(token)
+  const curTime = Math.floor(Date.now() / 1000)
+
+  return decoded.exp < curTime
+}
