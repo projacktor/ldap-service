@@ -11,6 +11,7 @@ import (
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 
 	"BackendGoLdap/auth"
 	"BackendGoLdap/config"
@@ -55,6 +56,16 @@ func main() {
 	// Build Chi router
 	r := chi.NewRouter()
 
+	// CORS settings
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"}, // your frontend URL
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by browsers
+	}))
+
 	// Public application root endpoint without authentication
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		// Log incoming request details
@@ -70,12 +81,13 @@ func main() {
 	})
 
 	// Public Keycloak + LDAP login
-	r.Post("/auth/login", auth.LoginHandlerByUID(kc, cfg))
+	r.Post("/auth/login", auth.LoginHandlerByUID(kc))
 
 	// Protected routes group
 	r.Group(func(r chi.Router) {
-		// Apply authentication middleware to all routes in this group
-		r.Use(auth.AuthMiddleware(kc, cfg))
+		// Apply authentication and token refresh middleware to all routes in this group
+		r.Use(auth.NewTokenRefreshMiddleware())
+		r.Use(auth.AuthMiddleware(kc))
 		//protected endpoint
 		r.Get("/api/protected", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("🔒 your secret data"))
