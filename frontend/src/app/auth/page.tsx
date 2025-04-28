@@ -5,6 +5,7 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
+import { verifyUser } from '@/lib/api'
 
 const formSchema = z.object({
   username: z.string().min(4, {
@@ -26,7 +27,7 @@ function Page() {
     resolver: zodResolver(formSchema)
   })
 
-  const onSubmit: SubmitHandler<FormSchema> = (data) => console.log(data)
+  const onSubmit: SubmitHandler<FormSchema> = (data) => verifyUser(data.username, data.password)
 
   return (
     <main className="h-screen">

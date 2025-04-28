@@ -10,11 +10,17 @@ export function saveTokens(accessToken: string, refreshToken: string): void {
 }
 
 export function getAccessToken(): string | null {
-  return sessionStorage.getItem('access_token')
+  if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+    return sessionStorage.getItem('access_token')
+  }
+  return null
 }
 
 export function getRefreshToken(): string | null {
-  return sessionStorage.getItem('refresh_token')
+  if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+    return sessionStorage.getItem('refresh_token')
+  }
+  return null
 }
 
 export function isTokenExpired(token: string): boolean {
