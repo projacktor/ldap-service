@@ -1,4 +1,9 @@
 export interface User {
-  username: string
+  preferred_username: string
   email: string
+  resource_access: {
+    account: {
+      roles: string[]
+    }
+  }
 }

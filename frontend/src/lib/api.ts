@@ -1,4 +1,4 @@
-import { getIdToken, getRefreshToken, isTokenExpired, saveTokens } from '@/lib/auth'
+import { getAccessToken, getRefreshToken, isTokenExpired, saveTokens } from '@/lib/auth'
 import { User } from '@/types/types'
 
 export async function verifyUser(username: string, password: string) {
@@ -18,13 +18,7 @@ export async function verifyUser(username: string, password: string) {
   }
 
   const data = await response.json()
-  saveTokens(
-    data.access_token,
-    data.refresh_token,
-    data.id_token,
-    data.expires_in,
-    data.refresh_expires_in
-  )
+  saveTokens(data.access_token, data.refresh_token, data.expires_in, data.refresh_expires_in)
   return data
 }
 
@@ -47,22 +41,16 @@ export async function refreshToken(): Promise<string> {
   }
 
   const data = await response.json()
-  saveTokens(
-    data.access_token,
-    data.refreshToken,
-    data.id_token,
-    data.expires_in,
-    data.refresh_expires_in
-  )
+  saveTokens(data.access_token, data.refreshToken, data.expires_in, data.refresh_expires_in)
   return data.access_token
 }
 
 export async function getUserInfo(): Promise<User> {
   const refreshToken = getRefreshToken()
   if (refreshToken !== null && !isTokenExpired(refreshToken)) {
-    const idToken = getIdToken()
+    const accessToken = getAccessToken()
 
-    if (!idToken) {
+    if (!accessToken) {
       throw new Error('Id token not found')
     }
 
@@ -70,7 +58,7 @@ export async function getUserInfo(): Promise<User> {
       method: 'GET',
       headers: {
         'Content-type': 'application/json',
-        Authorization: `Bearer ${idToken}`
+        Authorization: `Bearer ${accessToken}`
       }
     })
 

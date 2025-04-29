@@ -8,7 +8,6 @@ interface DecodeToken {
 export function saveTokens(
   accessToken: string,
   refreshToken: string,
-  idToken: string,
   expiresIn: number,
   refreshExpiresIn: number
 ): void {
@@ -25,11 +24,6 @@ export function saveTokens(
     secure: true,
     sameSite: 'Strict'
   })
-  Cookies.set('id_token', idToken, {
-    expires: 10e9, // long value
-    secure: true,
-    sameSite: 'Strict'
-  })
 }
 
 export function getAccessToken(): string | null {
@@ -38,10 +32,6 @@ export function getAccessToken(): string | null {
 
 export function getRefreshToken(): string | null {
   return Cookies.get('refresh_token') || null
-}
-
-export function getIdToken(): string | null {
-  return Cookies.get('id_token') || null
 }
 
 export function isTokenExpired(token: string): boolean {
@@ -54,6 +44,5 @@ export function isTokenExpired(token: string): boolean {
 export function logout(): void {
   Cookies.remove('access_token')
   Cookies.remove('refresh_token')
-  Cookies.remove('id_token')
   window.location.href = '/auth'
 }
