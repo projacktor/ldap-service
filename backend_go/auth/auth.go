@@ -152,9 +152,7 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			}
 
 			// Store the idToken in request context for later handlers
-			type contextKey string
-
-			const idTokenKey contextKey = "idToken"
+			idTokenKey := "idToken"
 			newCtx := context.WithValue(r.Context(), idTokenKey, idToken)
 			next.ServeHTTP(w, r.WithContext(newCtx))
 		})
