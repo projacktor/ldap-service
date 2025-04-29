@@ -152,8 +152,8 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			}
 
 			// Store the idToken in request context for later handlers
-			idTokenKey := "idToken"
-			newCtx := context.WithValue(r.Context(), idTokenKey, idToken)
+			accessTokenKey := "accessToken"
+			newCtx := context.WithValue(r.Context(), accessTokenKey, idToken)
 			next.ServeHTTP(w, r.WithContext(newCtx))
 		})
 	}
@@ -164,33 +164,57 @@ func GetUserDataFromToken() http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         logger := config.GetLogger()
 
-        idTokenValue := r.Context().Value("idToken")
-        if idTokenValue == nil {
+        accessTokenValue := r.Context().Value("accessToken")
+        if accessTokenValue == nil {
             logger.Error("missing idToken in context")
             http.Error(w, "missing token", http.StatusUnauthorized)
             return
         }
 
-        idToken := idTokenValue.(*oidc.IDToken)
-
-        // var claims struct {
-        //     Email             string `json:"email"`
-        //     PreferredUsername string `json:"preferred_username"`
-        // }
+        accessToken := accessTokenValue.(*oidc.IDToken)
 
 		var allData map[string]interface{}
 
-
-        if err := idToken.Claims(&allData); err != nil {
+        if err := accessToken.Claims(&allData); err != nil {
             logger.Error("failed to extract claims", zap.Error(err))
             http.Error(w, "invalid token claims", http.StatusInternalServerError)
             return
         }
 
-        // user := UserClaims{
-        //     Email:    claims.Email,
-        //     Username: claims.PreferredUsername,
-        // }
+		username, ok := allData["preferred_username"].(string)
+		if !ok {
+			logger.Error("failed to extract preferred_username")
+			http.Error(w, "invalid token claims", http.StatusInternalServerError)
+			return
+		}
+
+		email, ok := allData["email"].(string)
+		if !ok {
+			logger.Error("failed to extract email")
+			http.Error(w, "invalid token claims", http.StatusInternalServerError)
+			return
+		}
+
+		resourceAccess, ok := allData["resource_access"].(map[string]interface{})
+		if !ok {
+			logger.Error("failed to extract resource_access")
+			http.Error(w, "invalid token claims", http.StatusInternalServerError)
+			return
+		}
+
+		account := resourceAccess["account"].(map[string]interface{})
+		roles := account["roles"].([]interface{})
+		
+		var roleStrings []string
+		for _, role := range roles {
+			if roleStr, ok := role.(string); ok {
+				roleStrings = append(roleStrings, roleStr)
+			}
+		}
+
+		logger.Info("User claims", zap.String("username", username),
+		 			zap.String("email", email),
+					zap.Strings("roles", roleStrings))
 
         w.Header().Set("Content-Type", "application/json")
         err := json.NewEncoder(w).Encode(allData)
