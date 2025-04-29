@@ -173,24 +173,27 @@ func GetUserDataFromToken() http.HandlerFunc {
 
         idToken := idTokenValue.(*oidc.IDToken)
 
-        var claims struct {
-            Email             string `json:"email"`
-            PreferredUsername string `json:"preferred_username"`
-        }
+        // var claims struct {
+        //     Email             string `json:"email"`
+        //     PreferredUsername string `json:"preferred_username"`
+        // }
 
-        if err := idToken.Claims(&claims); err != nil {
+		var allData map[string]interface{}
+
+
+        if err := idToken.Claims(&allData); err != nil {
             logger.Error("failed to extract claims", zap.Error(err))
             http.Error(w, "invalid token claims", http.StatusInternalServerError)
             return
         }
 
-        user := UserClaims{
-            Email:    claims.Email,
-            Username: claims.PreferredUsername,
-        }
+        // user := UserClaims{
+        //     Email:    claims.Email,
+        //     Username: claims.PreferredUsername,
+        // }
 
         w.Header().Set("Content-Type", "application/json")
-        err := json.NewEncoder(w).Encode(user)
+        err := json.NewEncoder(w).Encode(allData)
 		if err != nil {
 			logger.Error("Failed to pass user claims", zap.Error(err))
 		}
