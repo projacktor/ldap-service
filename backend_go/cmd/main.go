@@ -15,61 +15,56 @@ import (
 
 	"BackendGoLdap/auth"
 	"BackendGoLdap/config"
-	"BackendGoLdap/handlers"
 )
 
-// init function runs before main() to initialize environment variables
 func init() {
-	// Load .env
 	viper.AutomaticEnv()
 }
 
 func main() {
-	// Load typed application configuration
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Fatalf("config load error: %v", err)
 	}
 
-	// Initialize zap logger with Kafka integration
 	if err := config.InitLogger(); err != nil {
 		log.Fatalf("failed to init logger: %v", err)
 	}
-	// Ensure logger flushes all buffered logs before exit
 	defer config.GetLogger().Sync()
 
 	logger := config.GetLogger()
 
-	// Log configuration values for debugging
 	logger.Info("LDAP Host", zap.String("version", cfg.LDAPHost))
 
-	// Add base context to logger
 	logger = logger.With(
 		zap.String("service", "ldap-api"),
 		zap.String("env", "development"),
 	)
-	// Initialize Keycloak client
+
+	// Initialize Keycloak gocloak client
 	kc := gocloak.NewClient(cfg.KeycloakBaseURL)
-	// Configure TLS to skip certificate verification (since we use self-signed certs)
 	kc.RestyClient().
 		SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-	// Build Chi router
+	// Initialize OIDC provider and verifier
+	if err := auth.InitOIDC(); err != nil {
+		log.Fatalf("failed to initialize OIDC: %v", err)
+	}
+
 	r := chi.NewRouter()
 
 	// CORS settings
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // your frontend URL
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by browsers
+		MaxAge:           300,
 	}))
 
-	// Public application root endpoint without authentication
+	// Public routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		// Log incoming request details
 		logger.Info("http request received",
 			zap.String("path", r.URL.Path),
 			zap.String("method", r.Method),
@@ -81,23 +76,18 @@ func main() {
 		}
 	})
 
-	r.Get("/users/", handlers.GetUserData())
+	// Get user from Keycloak
+	r.Get("/users/", auth.GetUserDataFromToken())
 
-	// Public Keycloak + LDAP login
+	// Public login with username/password
 	r.Post("/auth/login", auth.LoginHandlerByUID(kc))
 
-	// Protected routes group
+	// Protected routes
 	r.Group(func(r chi.Router) {
-		// Apply authentication and token refresh middleware to all routes in this group
-		r.Use(auth.NewTokenRefreshMiddleware())
-		r.Use(auth.AuthMiddleware(kc))
-		//protected endpoint
-		r.Get("/api/protected", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("🔒 your secret data"))
-		})
+		r.Use(auth.AuthMiddleware())
+		r.Get("/api/protected", auth.GetUserDataFromToken())
 	})
 
-	// Start HTTP server
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	logger.Info("starting server",
 		zap.String("address", addr),
