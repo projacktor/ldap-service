@@ -1,5 +1,5 @@
 'use client'
-import { User } from '@/lib/types'
+import { User } from '@/types/types'
 import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import Clocks from '@/components/clocks'
@@ -21,6 +21,7 @@ export default function Home() {
         setError('Failed to connect to server')
       }
     }
+
     fetchUser()
   }, [])
 
@@ -47,7 +48,7 @@ export default function Home() {
             </Button>
           </div>
         ) : (
-          <p className="text-center text-lg font-semibold text-[#c41010]">
+          <p className="text-center text-xl font-semibold text-[#c41010]">
             {error || 'Loading...'}
           </p>
         )}

@@ -1,5 +1,5 @@
 import { getIdToken, getRefreshToken, isTokenExpired, saveTokens } from '@/lib/auth'
-import { User } from '@/lib/types'
+import { User } from '@/types/types'
 
 export async function verifyUser(username: string, password: string) {
   const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_IP}/auth/login`, {
