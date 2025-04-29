@@ -23,13 +23,14 @@ var (
 	oauthConfig *oauth2.Config
 )
 
-// Clean struct for selected user claims
+// Struct for select only necessary user fields
 type UserClaims struct {
     Email    string `json:"email"`
     Username string `json:"username"`
 }
 
-// InitOIDC initializes the OIDC provider and verifier
+// InitOIDC initializes the OpenID provider and verifier
+// Make configuration as in Keycloak
 func InitOIDC() error {
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -64,7 +65,28 @@ func InitOIDC() error {
 }
 
 
-// LoginHandlerByUID - remains using gocloak ROPC flow
+// LoginHandlerByUID creates a login handler that takes a username and password
+// as JSON payload and returns the Keycloak access token.
+//
+// The handler expects the following JSON payload:
+//
+// {
+//     "username": string,
+//     "password": string,
+// }
+//
+// The handler returns a JSON response with the Keycloak access token:
+//
+// {
+//     "access_token": string,
+//     "expires_in":   int,
+//     "refresh_expires_in": int,
+//     "refresh_token": string,
+//     "token_type":   string,
+//     "id_token":     string,
+//     "session_state": string,
+//     "scope":        string,
+// }
 func LoginHandlerByUID(ck *gocloak.GoCloak) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger := config.GetLogger()
@@ -100,11 +122,14 @@ func LoginHandlerByUID(ck *gocloak.GoCloak) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(token)
+		err = json.NewEncoder(w).Encode(token)
+		if err != nil {
+			logger.Info("Error while encode token", zap.Error(err))
+		}
 	}
 }
 
-// AuthMiddleware using go-oidc verifier
+// AuthMiddleware
 func AuthMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -127,13 +152,16 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 			}
 
 			// Store the idToken in request context for later handlers
-			newCtx := context.WithValue(r.Context(), "idToken", idToken)
+			type contextKey string
+
+			const idTokenKey contextKey = "idToken"
+			newCtx := context.WithValue(r.Context(), idTokenKey, idToken)
 			next.ServeHTTP(w, r.WithContext(newCtx))
 		})
 	}
 }
 
-// GetUserDataFromToken fetches user claims from ID Token directly
+// GetUserDataFromToken fetches user claims using ID Token
 func GetUserDataFromToken() http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         logger := config.GetLogger()
@@ -164,7 +192,10 @@ func GetUserDataFromToken() http.HandlerFunc {
         }
 
         w.Header().Set("Content-Type", "application/json")
-        json.NewEncoder(w).Encode(user)
+        err := json.NewEncoder(w).Encode(user)
+		if err != nil {
+			logger.Error("Failed to pass user claims", zap.Error(err))
+		}
     }
 }
 

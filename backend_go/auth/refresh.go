@@ -52,7 +52,11 @@ func RefreshTokenHandler(ck *gocloak.GoCloak) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(token)
+		err = json.NewEncoder(w).Encode(token)
+		if err != nil {
+			logger.Error("failed to encode token", zap.Error(err))
+			http.Error(w, "failed to encode token", http.StatusExpectationFailed)
+		}
 	}
 }
 
