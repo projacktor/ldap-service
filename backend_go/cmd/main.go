@@ -76,16 +76,15 @@ func main() {
 		}
 	})
 
-	// Get user from Keycloak
-	r.Get("/users/", auth.GetUserDataFromToken())
-
 	// Public login with username/password
 	r.Post("/auth/login", auth.LoginHandlerByUID(kc))
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(auth.AuthMiddleware())
-		r.Get("/api/protected", auth.GetUserDataFromToken())
+
+		// Get users from LDAP db through keycloak
+		r.Get("/users", auth.GetUserDataFromToken())
 	})
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)

@@ -23,6 +23,12 @@ var (
 	oauthConfig *oauth2.Config
 )
 
+// Clean struct for selected user claims
+type UserClaims struct {
+    Email    string `json:"email"`
+    Username string `json:"username"`
+}
+
 // InitOIDC initializes the OIDC provider and verifier
 func InitOIDC() error {
 	cfg, err := config.GetConfig()
@@ -129,29 +135,37 @@ func AuthMiddleware() func(http.Handler) http.Handler {
 
 // GetUserDataFromToken fetches user claims from ID Token directly
 func GetUserDataFromToken() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logger := config.GetLogger()
+    return func(w http.ResponseWriter, r *http.Request) {
+        logger := config.GetLogger()
 
-		idTokenValue := r.Context().Value("idToken")
-		if idTokenValue == nil {
-			logger.Error("missing idToken in context")
-			http.Error(w, "missing token", http.StatusUnauthorized)
-			return
-		}
+        idTokenValue := r.Context().Value("idToken")
+        if idTokenValue == nil {
+            logger.Error("missing idToken in context")
+            http.Error(w, "missing token", http.StatusUnauthorized)
+            return
+        }
 
-		idToken := idTokenValue.(*oidc.IDToken)
+        idToken := idTokenValue.(*oidc.IDToken)
 
-		var claims map[string]interface{}
-		if err := idToken.Claims(&claims); err != nil {
-			logger.Error("failed to extract claims", zap.Error(err))
-			http.Error(w, "invalid token claims", http.StatusInternalServerError)
-			return
-		}
+        var claims struct {
+            Email             string `json:"email"`
+            PreferredUsername string `json:"preferred_username"`
+        }
 
-		// Return claims as JSON
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(claims)
-	}
+        if err := idToken.Claims(&claims); err != nil {
+            logger.Error("failed to extract claims", zap.Error(err))
+            http.Error(w, "invalid token claims", http.StatusInternalServerError)
+            return
+        }
+
+        user := UserClaims{
+            Email:    claims.Email,
+            Username: claims.PreferredUsername,
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(user)
+    }
 }
 
 // NewTokenRefreshMiddleware creates a new token refresh middleware with default Keycloak client
