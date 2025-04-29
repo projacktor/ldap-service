@@ -12,7 +12,7 @@ function Clocks() {
   if (!isMounted) return null
 
   return (
-    <div className="rounded-4xl border-2 border-gray-400 p-10 text-white">
+    <div className="rounded-4xl border-2 border-gray-400 bg-white/3 p-10 text-white backdrop-blur-sm">
       <Clock format={'h:mm:ss a'} style={{ fontSize: '2rem' }} ticking={true} />
     </div>
   )

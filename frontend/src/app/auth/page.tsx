@@ -41,7 +41,7 @@ function Page() {
 
   return (
     <main className="h-screen">
-      <div className="flex flex-col items-center space-y-8">
+      <div className="flex flex-col items-center space-y-8 rounded-4xl border-2 border-amber-50 bg-white/3 p-20 backdrop-blur-sm">
         <article className="space-y-4">
           <h1 className="text-center text-5xl font-bold text-white">Sign in to your account</h1>
           <p className="text-center text-base font-normal text-gray-400">
