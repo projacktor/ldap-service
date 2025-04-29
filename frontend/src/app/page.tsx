@@ -4,12 +4,25 @@ import Header from '@/components/Header'
 import { Button } from '@/components/ui/button'
 import Clocks from '@/components/clocks'
 import { logout } from '@/lib/auth'
+import { getUserInfo } from '@/lib/api'
+import { useEffect, useState } from 'react'
 
 export default function Home() {
-  const user: User = {
-    username: 'USSSER',
-    role: 'SUPERPUPER'
-  }
+  const [user, setUser] = useState<User | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const userInfo = await getUserInfo()
+        setUser(userInfo)
+      } catch (err) {
+        console.error(err)
+        setError('Failed to connect to server')
+      }
+    }
+    fetchUser()
+  }, [])
 
   return (
     <>
@@ -25,8 +38,8 @@ export default function Home() {
                 <h3 className="text-2xl font-normal hover:underline">{user.username}</h3>
               </div>
               <div className="flex flex-row items-center space-x-3">
-                <h2 className="text-3xl font-semibold">Your role:</h2>
-                <h3 className="text-2xl font-normal hover:underline">{user.role}</h3>
+                <h2 className="text-3xl font-semibold">Your email:</h2>
+                <h3 className="text-2xl font-normal hover:underline">{user.email}</h3>
               </div>
             </section>
             <Button variant={'secondary'} className="h-10 w-90" onClick={logout}>
@@ -35,7 +48,7 @@ export default function Home() {
           </div>
         ) : (
           <p className="text-center text-lg font-semibold text-[#c41010]">
-            Failed to connect to server
+            {error || 'Loading...'}
           </p>
         )}
       </main>
