@@ -2,7 +2,7 @@ FROM ubuntu:latest
 RUN apt update -y && apt install -y nodejs npm curl
 RUN npm install -g pnpm
 WORKDIR /frontend
-COPY ./frontend/package.json ./frontend/pnpm-lock.yaml ./
+COPY package.json ./frontend/pnpm-lock.yaml ./
 RUN pnpm install --force
 COPY ./frontend .
 EXPOSE 3000
