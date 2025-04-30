@@ -5,6 +5,8 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
+import { verifyUser } from '@/lib/api'
+import { useRouter } from 'next/navigation'
 
 const formSchema = z.object({
   username: z.string().min(4, {
@@ -26,11 +28,20 @@ function Page() {
     resolver: zodResolver(formSchema)
   })
 
-  const onSubmit: SubmitHandler<FormSchema> = (data) => console.log(data)
+  const router = useRouter()
+
+  const onSubmit: SubmitHandler<FormSchema> = async (data) => {
+    try {
+      await verifyUser(data.username, data.password)
+      router.push('/')
+    } catch (err) {
+      console.error('Failed to push to /', err)
+    }
+  }
 
   return (
-    <main className="flex h-screen w-screen items-center justify-center">
-      <div className="flex flex-col items-center space-y-8">
+    <main className="h-screen">
+      <div className="flex flex-col items-center space-y-8 rounded-4xl border-2 border-amber-50 bg-white/3 p-20 backdrop-blur-sm">
         <article className="space-y-4">
           <h1 className="text-center text-5xl font-bold text-white">Sign in to your account</h1>
           <p className="text-center text-base font-normal text-gray-400">
